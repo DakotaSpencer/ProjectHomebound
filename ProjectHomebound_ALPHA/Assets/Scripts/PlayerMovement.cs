@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+//////Build upon this and try not to change anything, unless absolutely necessary.//////
 public class PlayerMovement : MonoBehaviour
 {
     // Public variables in Unity
@@ -19,6 +19,10 @@ public class PlayerMovement : MonoBehaviour
 
     public float WalkSpeed = 6f; //How fast the player accelerates **WHEN WALKING**
     public float RunSpeed = 12f; // How fast the player acelerates **WHEN RUNNING**
+
+    public float CrouchSpeed = 2f;
+    public float NormalHeight = 1f;
+    public float CrouchHeight = 0.5f;
 
     // Private variables
     Vector3 velocity; // Calls for velocity of falling
@@ -40,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
         // Make sures that we don't add upon values (when two keys are pressed) and moves along x- and z-axises
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
+        
         //Makes sure that the falling velocity does not go under -2.
         if (isGrounded && velocity.y < 0)
         {
@@ -57,12 +62,18 @@ public class PlayerMovement : MonoBehaviour
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
-        // Allows the player to sprint
-        if (Input.GetButtonDown("Sprint") && isGrounded)
+        //Added and updated crouching 7/30/2020 ~ Dakota
+        if (Input.GetKey(KeyCode.LeftControl))  // Might need to configure in Input Manager 
         {
-            Vector3 sprintDirection = new Vector3(horizontal, 0f, vertical).normalized * 2;
+            controller.height = CrouchHeight;
+            speed = Input.GetKey(KeyCode.LeftControl) ? CrouchSpeed : WalkSpeed;
         }
-        
+        else
+        {
+            controller.height = NormalHeight;
+            //speed = speed;
+        }
+
         // Detects if WASD/Arrow keys are pressed
         if (direction.magnitude >= 0.1f)
         {
@@ -75,7 +86,6 @@ public class PlayerMovement : MonoBehaviour
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
 
-            // TODO: add the X button sprinting.
             //TODO: Add crouching
         }
         
