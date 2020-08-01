@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO.MemoryMappedFiles;
 using UnityEngine;
 //////Build upon this and try not to change anything, unless absolutely necessary.//////
 public class PlayerMovement : MonoBehaviour
@@ -24,14 +25,22 @@ public class PlayerMovement : MonoBehaviour
     public float NormalHeight = 1f;
     public float CrouchHeight = 0.5f;
 
+    public Transform armYPos;//Where the "arms" will cast from << for vaulting and climbing ledges of platforms
+    public Transform legYPos;//Where the "feet" will cast from << for vaulting and climbing ledges of platforms
+
+    public float vaultDist = 1;//Distance that the player will move forward onto ledge;
+
     // Private variables
     Vector3 velocity; // Calls for velocity of falling
     float turnSmoothVelocity; // Velocity for smoother turning
     bool isGrounded; // Ask is player is on the ground
 
+    [SerializeField] private string vaultableTag = "Vaultable";
+
     // Update is called once per frame
     void Update()
     {
+
         speed = Input.GetKey(KeyCode.LeftShift) ? RunSpeed : WalkSpeed;//Allows to switch between walk and run
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;//hides Cursor when in play mode. Press ESC t release cursor
@@ -50,6 +59,17 @@ public class PlayerMovement : MonoBehaviour
         {
             velocity.y = -2f;
         }
+
+        //This makes it so you can actually get up ledges.
+        if (isGrounded)
+        {
+            controller.slopeLimit = 45;
+        }
+        else
+        {
+            controller.slopeLimit = 90;
+        }
+
         
         // Allows the player to fall.
         velocity.y += gravity * Time.deltaTime;
@@ -61,6 +81,7 @@ public class PlayerMovement : MonoBehaviour
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+
 
         //Added and updated crouching 7/30/2020 ~ Dakota
         if (Input.GetKey(KeyCode.LeftControl))  // Might need to configure in Input Manager 
@@ -79,15 +100,51 @@ public class PlayerMovement : MonoBehaviour
         {
             // Creates a new angle for the player to follow.
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
+
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothingTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            // Moves the player in the angle that the camera is facing.
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
 
+            // Moves the player in the angle that the camera is facing.
+            controller.Move(moveDir.normalized * speed * Time.deltaTime);
             //TODO: Add crouching
         }
+
+
+        //Allows for vaulting up an object <<<We should probably tag objects that are vaultable or somehow id them.
+        //Right now slopes are kind of weird when vaulting //Camaron 7/31/2020
         
+        if (Input.GetButtonDown("Jump") && !isGrounded)
+        {
+
+            //The raycasts check if arm height is air and leg height is a platform;
+            Vector3 controllerDir = Quaternion.Euler(0f, controller.transform.eulerAngles.y, 0f) * Vector3.forward;
+
+            RaycastHit armHit, legHit;
+            Physics.Raycast(armYPos.position, controllerDir, out armHit, 1.5f);
+            Physics.Raycast(legYPos.position, controllerDir, out legHit, 1.5f);
+
+
+            //Read above comment. We can probs change legHit.collider != null to legHit.collider.CompareTag("vaultable") or something like that
+
+            if (armHit.collider == null && legHit.collider != null && legHit.collider.CompareTag("Vaultable"))
+            {
+                //print("success!!!");
+
+                controller.Move(new Vector3(0, legHit.collider.bounds.max.y - groundCheck.position.y, 0)); //Moves player to top of obj
+
+                controller.Move(controllerDir.normalized * vaultDist);//Moves player forward
+
+            }
+
+        }
+
+
+
     }
+
+
+
+
 }
