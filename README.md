@@ -1,2 +1,2 @@
 # ProjectHomebound
-General place for all the stuff used for Peoject Homebound
+General place for all the stuff used for Project Homebound
