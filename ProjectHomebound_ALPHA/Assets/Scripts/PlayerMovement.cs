@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using UnityEngine;
+
 //////Build upon this and try not to change anything, unless absolutely necessary.//////
 public class PlayerMovement : MonoBehaviour
 {
     // Public variables in Unity
     public CharacterController controller;  // Calls CharacterController
+
     public Transform cam; // Calls for Main Camera controlled by Cinemachine
     public Transform groundCheck; // Calls for the ground check
     public LayerMask groundMask; // Calls for the ground layer
@@ -30,10 +32,11 @@ public class PlayerMovement : MonoBehaviour
 
     public float vaultDist = 1;//Distance that the player will move forward onto ledge;
 
+    public bool isGrounded; // Ask is player is on the ground
+
     // Private variables
     Vector3 velocity; // Calls for velocity of falling
     float turnSmoothVelocity; // Velocity for smoother turning
-    bool isGrounded; // Ask is player is on the ground
 
     [SerializeField] private string vaultableTag = "Vaultable";
 
@@ -108,9 +111,7 @@ public class PlayerMovement : MonoBehaviour
 
             // Moves the player in the angle that the camera is facing.
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
-            //TODO: Add crouching
         }
-
 
         //Allows for vaulting up an object <<<We should probably tag objects that are vaultable or somehow id them.
         //Right now slopes are kind of weird when vaulting //Camaron 7/31/2020
@@ -135,16 +136,7 @@ public class PlayerMovement : MonoBehaviour
                 controller.Move(new Vector3(0, legHit.collider.bounds.max.y - groundCheck.position.y, 0)); //Moves player to top of obj
 
                 controller.Move(controllerDir.normalized * vaultDist);//Moves player forward
-
             }
-
         }
-
-
-
     }
-
-
-
-
 }
